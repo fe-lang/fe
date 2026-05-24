@@ -2062,6 +2062,7 @@ name = "fe"
 version = "26.1.0"
 dependencies = [
  "axum",
+ "blake3",
  "camino",
  "clap",
  "clap_complete",
@@ -2127,6 +2128,7 @@ dependencies = [
 name = "fe-codegen"
 version = "26.1.0"
 dependencies = [
+ "blake3",
  "dir-test",
  "fe-common",
  "fe-driver",
@@ -2278,6 +2280,7 @@ dependencies = [
 name = "fe-introspection-config"
 version = "26.1.0"
 dependencies = [
+ "blake3",
  "serde",
  "serde_json",
  "toml 0.8.23",
@@ -2333,6 +2336,7 @@ dependencies = [
 name = "fe-mir"
 version = "26.1.0"
 dependencies = [
+ "blake3",
  "cranelift-entity 0.130.1",
  "fe-common",
  "fe-dataflow",
@@ -2437,6 +2441,7 @@ dependencies = [
 name = "fe-trace-facts"
 version = "26.1.0"
 dependencies = [
+ "blake3",
  "fe-common",
  "fe-shape-address",
  "serde",
