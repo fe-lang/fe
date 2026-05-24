@@ -2174,6 +2174,7 @@ dependencies = [
  "fe-trace-facts",
  "gimli",
  "serde",
+ "serde_json",
 ]
 
 [[package]]
