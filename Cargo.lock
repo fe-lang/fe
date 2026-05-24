@@ -2363,6 +2363,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "fe-trace-facts"
+version = "26.1.0"
+dependencies = [
+ "fe-common",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "fe-uitest"
 version = "26.1.0"
 dependencies = [
