@@ -2397,6 +2397,7 @@ dependencies = [
  "fe-introspection-config",
  "fe-trace-facts",
  "serde",
+ "serde_json",
 ]
 
 [[package]]
