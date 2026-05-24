@@ -181,6 +181,7 @@ It is not yet evidence that MIR/codegen/backend emitted those facts during a rea
 
 `fe dev trace` reads validated trace JSONL bundles and reports the bundle data source from metadata.
 Real trace emission currently includes phase-owned MIR facts and actual EVM bytecode instruction facts; loop membership, source-local labels, storage allocation, and zext causality are still explicit gaps.
+`zext-report` is intentionally not exposed until compiler phases emit `InsertIntegerZeroExtend` events and value-property facts.
 
 ```bash
 cargo run -p fe -- dev trace emit fib_demo.fe --out target/fib.trace.jsonl
