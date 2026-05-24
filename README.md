@@ -180,9 +180,10 @@ It is explicitly fixture-backed: the CLI recognizes `fib_demo.fe` and emits fixt
 It is not yet evidence that MIR/codegen/backend emitted those facts during a real compilation.
 
 `fe dev trace` reads validated trace JSONL bundles and reports the bundle data source from metadata.
-Real trace emission currently includes phase-owned MIR facts, source-local display names, MIR storage reasons, MIR lowering events, value properties, and actual EVM bytecode/gas facts.
-Real loop membership, MIR-to-bytecode origin edges, backend storage allocation, and zext causality are still explicit gaps.
-Real `loop-cost` therefore reports a compiler-derived bytecode summary and says loop contents are unavailable until `LoopMembership`/CFG facts are emitted.
+Real trace emission currently includes phase-owned MIR facts, source-local display names, MIR storage reasons, MIR lowering events, value properties, Sonatina trace-view CFG/loop facts through a Fe adapter, and actual EVM bytecode/gas facts.
+Coarse source attribution currently falls back to whole-file code-object spans when per-node source edges are missing.
+MIR-to-bytecode origin edges, backend storage allocation, target bytecode loop membership, and zext causality are still explicit gaps.
+Real `loop-cost` can summarize compiler-derived Sonatina loop membership when present, but target-level loop cost remains limited until Sonatina-to-bytecode edges exist.
 The fixture path may show target UX such as per-iteration loop cost, but it is always labeled fixture-backed and not compiler-derived.
 `zext-report` is intentionally not exposed until compiler phases emit `InsertIntegerZeroExtend` events and value-property facts.
 
