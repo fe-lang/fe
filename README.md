@@ -180,7 +180,8 @@ It is explicitly fixture-backed: the CLI recognizes `fib_demo.fe` and emits fixt
 It is not yet evidence that MIR/codegen/backend emitted those facts during a real compilation.
 
 `fe dev trace` reads validated trace JSONL bundles and reports the bundle data source from metadata.
-Real trace emission currently includes phase-owned MIR facts and actual EVM bytecode instruction facts; loop membership, source-local labels, storage allocation, and zext causality are still explicit gaps.
+Real trace emission currently includes phase-owned MIR facts, source-local display names, MIR storage reasons, MIR lowering events, value properties, and actual EVM bytecode/gas facts.
+Loop membership, MIR-to-bytecode origin edges, backend storage allocation, and zext causality are still explicit gaps.
 `zext-report` is intentionally not exposed until compiler phases emit `InsertIntegerZeroExtend` events and value-property facts.
 
 ```bash
