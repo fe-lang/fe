@@ -197,6 +197,16 @@ cargo run -p fe -- dev trace-fixture explain-local fib_demo.fe --local b
 cargo run -p fe -- dev trace status
 ```
 
+Latest local verification for the trace/LSP introspection surface:
+
+| Command | Result |
+| --- | --- |
+| `cargo check -p fe -p fe-language-server -p fe-introspection-config -p fe-trace-facts -p fe-trace-query -p fe-codegen -p fe-mir -p fe-hir` | passed |
+| `cargo test -p fe-introspection-config -p fe-trace-facts -p fe-trace-query` | passed |
+| `cargo test -p fe-language-server --lib` | passed |
+| `cargo test -p fe-introspection-config -p fe-trace-facts -p fe-trace-query -p fe-codegen -p fe-language-server -p fe trace` | passed |
+| `cargo test --workspace` | passed after the static gas trace report commit |
+
 ## Repository layout
 
 - `crates/` — compiler crates (parser, HIR, type checker, MIR, codegen, CLI, language server, …)
