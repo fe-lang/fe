@@ -2379,6 +2379,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "fe-shape-address"
+version = "26.1.0"
+dependencies = [
+ "fe-common",
+ "serde",
+]
+
+[[package]]
 name = "fe-test-utils"
 version = "26.1.0"
 dependencies = [
