@@ -56,6 +56,12 @@ pub enum AnalyzeFormat {
     Json,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum)]
+pub enum TraceReportFormat {
+    Text,
+    Json,
+}
+
 #[derive(Debug, Clone, Parser)]
 #[command(version, about, long_about = None)]
 pub struct Options {
@@ -670,6 +676,9 @@ pub enum DevTraceLiveCommand {
         /// Source file URI or path to query.
         #[arg(long)]
         uri: Option<String>,
+        /// Output format.
+        #[arg(long, value_enum, default_value = "text")]
+        format: TraceReportFormat,
     },
     /// Ask the live LSP endpoint to explain a local.
     ExplainLocal {
@@ -679,12 +688,18 @@ pub enum DevTraceLiveCommand {
         /// Source file URI or path to query.
         #[arg(long)]
         uri: Option<String>,
+        /// Output format.
+        #[arg(long, value_enum, default_value = "text")]
+        format: TraceReportFormat,
     },
     /// Ask the live LSP endpoint for static gas status.
     GasBreakdown {
         /// Source file URI or path to query.
         #[arg(long)]
         uri: Option<String>,
+        /// Output format.
+        #[arg(long, value_enum, default_value = "text")]
+        format: TraceReportFormat,
     },
 }
 
@@ -722,6 +737,9 @@ pub struct DevTraceInputArgs {
     /// Trace JSONL bundle to read.
     #[arg(long = "from", value_name = "TRACE_JSONL")]
     pub from: Utf8PathBuf,
+    /// Output format.
+    #[arg(long, value_enum, default_value = "text")]
+    pub format: TraceReportFormat,
 }
 
 #[derive(Debug, Clone, Args)]
@@ -735,6 +753,9 @@ pub struct DevTraceExplainLocalArgs {
     /// Exact origin key display label for ambiguous locals.
     #[arg(long)]
     pub local_key: Option<String>,
+    /// Output format.
+    #[arg(long, value_enum, default_value = "text")]
+    pub format: TraceReportFormat,
 }
 
 #[derive(Debug, Clone, Args)]
@@ -748,6 +769,9 @@ pub struct DevTraceGasArgs {
     /// Source-attribution policy.
     #[arg(long, default_value = "exclusive-primary")]
     pub policy: String,
+    /// Output format.
+    #[arg(long, value_enum, default_value = "text")]
+    pub format: TraceReportFormat,
 }
 
 #[derive(Debug, Clone, Args)]
@@ -758,6 +782,9 @@ pub struct DevTraceAttributionArgs {
     /// Source-attribution policy.
     #[arg(long, default_value = "exclusive-primary")]
     pub policy: String,
+    /// Output format.
+    #[arg(long, value_enum, default_value = "text")]
+    pub format: TraceReportFormat,
 }
 
 #[derive(Debug, Clone, Args)]
@@ -771,6 +798,9 @@ pub struct DevTraceDynamicGasArgs {
     /// Source-attribution policy.
     #[arg(long, default_value = "exclusive-primary")]
     pub policy: String,
+    /// Output format.
+    #[arg(long, value_enum, default_value = "text")]
+    pub format: TraceReportFormat,
 }
 
 #[derive(Debug, Clone, Args)]
@@ -787,6 +817,9 @@ pub struct DevTraceGasToSourceArgs {
     /// Source-attribution policy.
     #[arg(long, default_value = "exclusive-primary")]
     pub policy: String,
+    /// Output format.
+    #[arg(long, value_enum, default_value = "text")]
+    pub format: TraceReportFormat,
 }
 
 #[derive(Debug, Clone, Args)]
@@ -794,9 +827,12 @@ pub struct DevTracePcArgs {
     /// Trace JSONL bundle to read.
     #[arg(long = "from", value_name = "TRACE_JSONL")]
     pub from: Utf8PathBuf,
-    /// Bytecode PC or instruction index to inspect.
+    /// Bytecode PC to inspect.
     #[arg(long)]
     pub pc: u32,
+    /// Output format.
+    #[arg(long, value_enum, default_value = "text")]
+    pub format: TraceReportFormat,
 }
 
 #[derive(Debug, Clone, Args)]
@@ -820,6 +856,9 @@ pub struct TraceFixtureLoopCostArgs {
     /// Function label to display in the report.
     #[arg(long, default_value = "Fib.recv Compute handler")]
     pub function: String,
+    /// Output format.
+    #[arg(long, value_enum, default_value = "text")]
+    pub format: TraceReportFormat,
 }
 
 #[derive(Debug, Clone, Args)]
@@ -833,6 +872,9 @@ pub struct TraceFixtureExplainLocalArgs {
     /// Function label to display in the report.
     #[arg(long, default_value = "Fib.recv Compute handler")]
     pub function: String,
+    /// Output format.
+    #[arg(long, value_enum, default_value = "text")]
+    pub format: TraceReportFormat,
 }
 
 fn main() {
@@ -1339,9 +1381,14 @@ fn lsp_status(resolved_root: Option<&Utf8PathBuf>) -> Result<String, String> {
     let root = lsp_discovery_root(resolved_root)?;
     let info = doc::LspServerInfo::read_from_workspace(root.as_std_path())
         .ok_or_else(|| format!("no .fe-lsp.json found at {root}"))?;
+    let check = doc::ExistingInstanceCheck::inspect(root.as_std_path());
     let mut out = String::new();
     out.push_str("Fe LSP status\n\n");
+    out.push_str(&format!("status: {}\n", lsp_check_status(&check)));
     out.push_str(&format!("schema_version: {}\n", info.schema_version));
+    if info.schema_version != 1 {
+        out.push_str("schema_status: unsupported; restart fe lsp with the current binary\n");
+    }
     out.push_str(&format!("pid: {}\n", info.pid));
     out.push_str(&format!("alive: {}\n", info.is_alive()));
     out.push_str(&format!(
@@ -1351,11 +1398,18 @@ fn lsp_status(resolved_root: Option<&Utf8PathBuf>) -> Result<String, String> {
     if let Some(hash) = &info.config_hash {
         out.push_str(&format!("config_hash: {hash}\n"));
     }
+    if let Some(status) = lsp_config_hash_status(&root, &info) {
+        out.push_str(&format!("{status}\n"));
+    }
     if let Some(http) = &info.http {
         out.push_str(&format!("http: {}\n", http.base_url));
-        match http_get_text(&format!("{}/health", http.base_url.trim_end_matches('/'))) {
-            Ok(body) => out.push_str(&format!("health: {body}\n")),
-            Err(err) => out.push_str(&format!("health: unavailable ({err})\n")),
+        if matches!(check, doc::ExistingInstanceCheck::SiblingLive { .. }) {
+            match http_get_text(&format!("{}/health", http.base_url.trim_end_matches('/'))) {
+                Ok(body) => out.push_str(&format!("health: {body}\n")),
+                Err(err) => out.push_str(&format!("health: unavailable ({err})\n")),
+            }
+        } else {
+            out.push_str("health: skipped because server info is not a live matching instance\n");
         }
     } else if let Some(docs_url) = &info.docs_url {
         out.push_str(&format!("docs_url: {docs_url}\n"));
@@ -1370,6 +1424,15 @@ fn lsp_doctor(resolved_root: Option<&Utf8PathBuf>) -> Result<String, String> {
     let mut out = String::new();
     out.push_str("Fe LSP doctor\n\n");
     out.push_str(&format!("workspace_root: {root}\n"));
+    if let Some(info) = doc::LspServerInfo::read_from_workspace(root.as_std_path()) {
+        out.push_str(&format!("schema_version: {}\n", info.schema_version));
+        if info.schema_version != 1 {
+            out.push_str("schema_status: unsupported; restart fe lsp with the current binary\n");
+        }
+        if let Some(status) = lsp_config_hash_status(&root, &info) {
+            out.push_str(&format!("{status}\n"));
+        }
+    }
     match check {
         doc::ExistingInstanceCheck::None => out.push_str("status: no server info file found\n"),
         doc::ExistingInstanceCheck::StaleFound {
@@ -1396,6 +1459,45 @@ fn lsp_doctor(resolved_root: Option<&Utf8PathBuf>) -> Result<String, String> {
         }
     }
     Ok(out)
+}
+
+#[cfg(feature = "lsp")]
+fn lsp_check_status(check: &doc::ExistingInstanceCheck) -> String {
+    match check {
+        doc::ExistingInstanceCheck::None => "no server info file found".to_string(),
+        doc::ExistingInstanceCheck::StaleFound {
+            stale_pid,
+            recorded_workspace_root,
+        } => format!(
+            "stale server info (pid {stale_pid}, recorded workspace_root={recorded_workspace_root:?})"
+        ),
+        doc::ExistingInstanceCheck::SiblingLive {
+            sibling_pid,
+            sibling_docs_url,
+        } => format!("live matching server (pid {sibling_pid}, docs_url={sibling_docs_url:?})"),
+        doc::ExistingInstanceCheck::RootMismatch {
+            other_pid,
+            other_workspace_root,
+            our_workspace_root,
+        } => format!(
+            "root mismatch (pid {other_pid}, recorded={other_workspace_root:?}, detected={our_workspace_root})"
+        ),
+        doc::ExistingInstanceCheck::Malformed => "malformed .fe-lsp.json".to_string(),
+    }
+}
+
+#[cfg(feature = "lsp")]
+fn lsp_config_hash_status(root: &Utf8PathBuf, info: &doc::LspServerInfo) -> Option<String> {
+    let current = introspection_config::FeToolingConfig::load_from_workspace(root.as_std_path())
+        .ok()?
+        .stable_hash();
+    Some(match info.config_hash.as_deref() {
+        Some(recorded) if recorded == current => "config_hash_status: match".to_string(),
+        Some(recorded) => {
+            format!("config_hash_status: mismatch (server={recorded}, current={current})")
+        }
+        None => format!("config_hash_status: missing (current={current})"),
+    })
 }
 
 #[cfg(feature = "lsp")]
