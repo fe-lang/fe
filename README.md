@@ -210,6 +210,22 @@ Latest local verification for the trace/LSP introspection surface:
 | `cargo test -p fe-introspection-config -p fe-trace-facts -p fe-trace-query -p fe-codegen -p fe-language-server -p fe trace` | passed |
 | `cargo test --workspace` | passed after the static gas trace report commit |
 
+Trace correctness build gate captured locally on 2026-05-24 after the Sonatina trace-view adapter and `loop-contents` commits:
+
+| Matrix area | Commands | Result |
+| --- | --- | --- |
+| Full workspace | `cargo test --workspace` | passed |
+| Mechanical checks | `cargo check -p fe-trace-facts`, `fe-trace-query`, `fe-shape-address`, `fe-mir`, `fe-codegen`, `fe` | passed |
+| Focused package tests | `cargo test -p fe-trace-facts`, `fe-trace-query`, `fe-shape-address`, `fe-mir`, `fe-codegen`, `fe` | passed |
+| Real compiler trace | `fe dev trace emit/validate/loop-cost/explain-local`, plus `gas-breakdown`, `gas-by-source`, `bytecode-size-by-source`, `explain-pc`, `optimized-code-honesty` | passed |
+| Fixture trace | `fe dev trace-fixture emit/loop-cost/explain-local` and validation through `fe dev trace validate` | passed |
+| Shape smoke | `fe shape emit/explain/diff/bucket` over `0x5f600101` variants | passed |
+| LSP local discovery | `fe lsp doctor` | passed |
+| LSP server-dependent commands | `fe lsp status` | known failure without an active `.fe-lsp.json` server-info file |
+| Review-suggested future CLI spellings | `fe lsp config --show`, `fe dev trace live status`, `fe dev trace live query status` | known CLI usage failures; current implemented commands differ and are handled in the LSP polish phase |
+
+The local command logs were captured under `target/trace-polish-build-gate/` in the implementor worktree. They are not committed because they are generated build artifacts.
+
 ## Repository layout
 
 - `crates/` — compiler crates (parser, HIR, type checker, MIR, codegen, CLI, language server, …)
