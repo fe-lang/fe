@@ -181,7 +181,9 @@ It is not yet evidence that MIR/codegen/backend emitted those facts during a rea
 
 `fe dev trace` reads validated trace JSONL bundles and reports the bundle data source from metadata.
 Real trace emission currently includes phase-owned MIR facts, source-local display names, MIR storage reasons, MIR lowering events, value properties, and actual EVM bytecode/gas facts.
-Loop membership, MIR-to-bytecode origin edges, backend storage allocation, and zext causality are still explicit gaps.
+Real loop membership, MIR-to-bytecode origin edges, backend storage allocation, and zext causality are still explicit gaps.
+Real `loop-cost` therefore reports a compiler-derived bytecode summary and says loop contents are unavailable until `LoopMembership`/CFG facts are emitted.
+The fixture path may show target UX such as per-iteration loop cost, but it is always labeled fixture-backed and not compiler-derived.
 `zext-report` is intentionally not exposed until compiler phases emit `InsertIntegerZeroExtend` events and value-property facts.
 
 ```bash
