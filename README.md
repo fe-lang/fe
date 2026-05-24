@@ -181,6 +181,7 @@ It is not yet evidence that MIR/codegen/backend emitted those facts during a rea
 
 `fe dev trace` reads validated trace JSONL bundles and reports the bundle data source from metadata.
 Real trace emission currently includes phase-owned MIR facts, source-local display names, MIR storage reasons, MIR lowering events, value properties, Sonatina trace-view CFG/loop facts through a Fe adapter, and actual EVM bytecode/gas facts.
+The older MIR-derived Sonatina CFG bridge is deprecated, transitional/test-only, and not used by real trace emission.
 Coarse source attribution currently falls back to whole-file code-object spans when per-node source edges are missing.
 MIR-to-bytecode origin edges, backend storage allocation, target bytecode loop membership, and zext causality are still explicit gaps.
 Real `loop-cost` can summarize compiler-derived Sonatina loop membership when present, but target-level loop cost remains limited until Sonatina-to-bytecode edges exist.
