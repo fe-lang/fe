@@ -180,9 +180,13 @@ It is explicitly fixture-backed: the CLI recognizes `fib_demo.fe` and emits fixt
 It is not yet evidence that MIR/codegen/backend emitted those facts during a real compilation.
 
 `fe dev trace` reads validated trace JSONL bundles and reports the bundle data source from metadata.
-Until compiler trace emission is wired, JSONL produced by `trace-fixture emit` remains marked as fixture data.
+Real trace emission currently includes phase-owned MIR facts and actual EVM bytecode instruction facts; loop membership, source-local labels, storage allocation, and zext causality are still explicit gaps.
 
 ```bash
+cargo run -p fe -- dev trace emit fib_demo.fe --out target/fib.trace.jsonl
+cargo run -p fe -- dev trace validate --from target/fib.trace.jsonl
+cargo run -p fe -- dev trace loop-cost --from target/fib.trace.jsonl
+cargo run -p fe -- dev trace explain-local --from target/fib.trace.jsonl --local b
 cargo run -p fe -- dev trace-fixture emit fib_demo.fe --out target/fib.fixture.trace.jsonl
 cargo run -p fe -- dev trace validate --from target/fib.fixture.trace.jsonl
 cargo run -p fe -- dev trace loop-cost --from target/fib.fixture.trace.jsonl
