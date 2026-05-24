@@ -2051,6 +2051,7 @@ dependencies = [
  "fe-resolver",
  "fe-semantic-indexing",
  "fe-test-utils",
+ "fe-trace-facts",
  "fe-web",
  "glob",
  "hex",
