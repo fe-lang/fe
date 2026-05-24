@@ -173,6 +173,21 @@ RUSTC_WRAPPER= cargo run -q -p fe -- test \
     <path/to/test.fe>
 ```
 
+## Developer Trace Prototype
+
+This branch contains an unstable Fibonacci trace UX prototype under `fe dev trace-fixture`.
+It is explicitly fixture-backed: the CLI recognizes `fib_demo.fe` and constructs hard-coded trace facts to demonstrate the intended reports.
+It is not yet evidence that MIR/codegen/backend emitted those facts during a real compilation.
+
+Reserved real-trace commands will live under `fe dev trace` and operate on validated compiler-derived trace JSONL.
+Until that path is wired, use `fe dev trace status` to see the current boundary.
+
+```bash
+cargo run -p fe -- dev trace-fixture loop-cost fib_demo.fe
+cargo run -p fe -- dev trace-fixture explain-local fib_demo.fe --local b
+cargo run -p fe -- dev trace status
+```
+
 ## Repository layout
 
 - `crates/` — compiler crates (parser, HIR, type checker, MIR, codegen, CLI, language server, …)
