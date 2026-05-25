@@ -215,7 +215,7 @@ Latest local verification for the trace/LSP introspection surface:
 | `cargo test -p fe-introspection-config -p fe-trace-facts -p fe-trace-query` | passed |
 | `cargo test -p fe-language-server --lib` | passed |
 | `cargo test -p fe-introspection-config -p fe-trace-facts -p fe-trace-query -p fe-codegen -p fe-language-server -p fe trace` | passed |
-| `cargo test --workspace` | last full pass was before the final merge-gate polish; final rerun is the next gate |
+| `cargo test --workspace` | passed after the final merge-gate polish on 2026-05-24 |
 
 Trace correctness build gate captured locally on 2026-05-24 after the Sonatina trace-view adapter and `loop-contents` commits:
 
