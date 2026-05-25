@@ -175,18 +175,17 @@ RUSTC_WRAPPER= cargo run -q -p fe -- test \
 
 ## Developer Trace Prototype
 
-This branch contains an unstable Fibonacci trace UX prototype under `fe dev trace-fixture`.
-It is explicitly fixture-backed: the CLI recognizes `fib_demo.fe` and emits fixture trace JSONL to demonstrate the intended reports.
-It is not yet evidence that MIR/codegen/backend emitted those facts during a real compilation.
+This branch has two trace paths, and their evidence level is intentionally different.
 
-`fe dev trace` reads validated trace JSONL bundles and reports the bundle data source from metadata.
-Real trace emission currently includes phase-owned MIR facts, source-local display names, MIR storage reasons, MIR lowering events, value properties, Sonatina trace-view CFG/loop facts through a Fe adapter, and actual EVM bytecode/gas facts.
+`fe dev trace-fixture` is fixture-backed. It recognizes `fib_demo.fe` and emits demo trace JSONL to show the target UX. Those reports are not evidence that MIR, codegen, or the backend emitted the same facts during compilation.
+
+`fe dev trace` consumes validated trace JSONL and reports the bundle data source from metadata. Current compiler-emitted facts include phase-owned MIR facts, source-local display names, MIR storage reasons, MIR lowering events, MIR value properties, Sonatina trace-view CFG/loop facts through the Fe adapter, and actual EVM bytecode/opcode/static-gas facts.
+
+Derived reports are read-only projections over those facts. Datalog rows, DebugBundle exports, DWARF, ethdebug, gas/source reports, and CLI/LSP views must not create canonical identity or repair missing origin data. Coarse source attribution may fall back to whole-file code-object spans when per-node source edges are missing; those rows are low confidence.
+
+Known gaps remain explicit: MIR-to-bytecode origin edges, backend stack/register allocation facts, target bytecode loop membership, and real zext causality hooks are incomplete. Real `loop-cost` can summarize compiler-derived Sonatina loop membership when present, but it is not a target bytecode loop-cost proof until Sonatina-to-bytecode edges exist. `zext-report` stays unavailable until compiler phases emit `InsertIntegerZeroExtend` events linked to final instructions; MIR value-property facts alone are not enough.
+
 The older MIR-derived Sonatina CFG bridge is deprecated, transitional/test-only, and not used by real trace emission.
-Coarse source attribution currently falls back to whole-file code-object spans when per-node source edges are missing.
-MIR-to-bytecode origin edges, backend storage allocation, target bytecode loop membership, and zext causality are still explicit gaps.
-Real `loop-cost` can summarize compiler-derived Sonatina loop membership when present, but target-level loop cost remains limited until Sonatina-to-bytecode edges exist.
-The fixture path may show target UX such as per-iteration loop cost, but it is always labeled fixture-backed and not compiler-derived.
-`zext-report` is intentionally not exposed until compiler phases emit `InsertIntegerZeroExtend` events and value-property facts.
 
 ```bash
 cargo run -p fe -- dev trace emit fib_demo.fe --out target/fib.trace.jsonl
@@ -206,11 +205,17 @@ Latest local verification for the trace/LSP introspection surface:
 
 | Command | Result |
 | --- | --- |
+| `cargo test -p fe-introspection-config -- --nocapture` | passed during final merge-gate performance-guard polish |
+| `cargo test -p fe-trace-query live_http -- --nocapture` | passed during final merge-gate performance-guard polish |
+| `cargo check -p fe-language-server` | passed during final merge-gate performance-guard polish |
+| `cargo check -p fe` | passed during final merge-gate performance-guard polish |
+| `cargo test -p fe-language-server -- --nocapture` | passed during final merge-gate performance-guard polish |
+| `cargo test -p fe trace_live -- --nocapture` | passed during final merge-gate performance-guard polish |
 | `cargo check -p fe -p fe-language-server -p fe-introspection-config -p fe-trace-facts -p fe-trace-query -p fe-codegen -p fe-mir -p fe-hir` | passed |
 | `cargo test -p fe-introspection-config -p fe-trace-facts -p fe-trace-query` | passed |
 | `cargo test -p fe-language-server --lib` | passed |
 | `cargo test -p fe-introspection-config -p fe-trace-facts -p fe-trace-query -p fe-codegen -p fe-language-server -p fe trace` | passed |
-| `cargo test --workspace` | passed after the static gas trace report commit |
+| `cargo test --workspace` | last full pass was before the final merge-gate polish; final rerun is the next gate |
 
 Trace correctness build gate captured locally on 2026-05-24 after the Sonatina trace-view adapter and `loop-contents` commits:
 
